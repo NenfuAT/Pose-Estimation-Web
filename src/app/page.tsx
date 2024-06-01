@@ -19,11 +19,13 @@ export default function Home({domain}: HomeProps) {
   );
 }
 
-export const getServerSideProps = async() => {
-  const domain = process.env.DOMAIN_NAME;
-  return{
+export async function getServerSideProps() {
+  // Vercelの環境変数を取得
+  const domain = process.env.DOMAIN_NAME || 'デフォルトドメイン';
+
+  return {
     props: {
       domain,
-    }
-  }
+    },
+  };
 }
