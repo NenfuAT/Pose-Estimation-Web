@@ -1,11 +1,8 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 
-interface HomeProps {
-  domain: string;
-}
-
-export default function Home({domain}: HomeProps) {
+export default function Home() {
+  
   return (
     <main className={styles.main}>
       <div>
@@ -13,7 +10,7 @@ export default function Home({domain}: HomeProps) {
       </div>
       <div>
         <h1>ドメイン:</h1>
-        <p>{domain}</p>
+        <p>{process.env.DOMAIN_NAME}</p>
       </div>
     </main>
   );
