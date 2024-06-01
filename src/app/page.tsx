@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [data, setData] = useState(null);
-
+  let domain
   useEffect(() => {
     const fetchData = async () => {
+      domain=`${process.env.DOMAIN_NAME}`
       try {
         const res = await fetch(`${process.env.DOMAIN_NAME}/api/bucket/list`);
         const result = await res.json();
@@ -27,7 +28,7 @@ export default function Home() {
       </div>
       <div>
         <h1>ドメイン:</h1>
-        <p>{process.env.DOMAIN_NAME}</p>
+        <p>{domain}</p>
       </div>
     </main>
   );
