@@ -10,11 +10,3 @@ export default function Home() {
     </main>
   );
 }
-export const getServerSideProps = async() => {
-  const domain = process.env.DOMAIN_NAME;
-  return{
-    props: {
-      domain,
-    }
-  }
-}
