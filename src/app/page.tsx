@@ -1,34 +1,40 @@
-'use client'
-import Image from "next/image";
-import styles from "./page.module.css";
-import { useEffect, useState } from "react";
+"use client"
+import { useState, useEffect } from 'react';
+import styles from './page.module.css';
 
 export default function Home() {
-  const [data, setData] = useState(null);
-  let domain
+  const [responseData, setResponseData] = useState<string[]>([]);
+
   useEffect(() => {
+    // クライアントサイドでAPIを叩く関数
     const fetchData = async () => {
-      domain=`${process.env.DOMAIN_NAME}`
       try {
-        const res = await fetch(`${process.env.DOMAIN_NAME}/api/bucket/list`);
-        const result = await res.json();
-        setData(result);
+        const response = await fetch('/api/buckets'); // APIのエンドポイントを指定
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const data = await response.json();
+        setResponseData(data.buckets);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       }
     };
 
+    // fetchData関数を呼び出してAPIを叩く
     fetchData();
-  }, []);
-  
+  }, []); // コンポーネントがマウントされたときのみ実行する
+
   return (
     <main className={styles.main}>
       <div>
-        <a>　　　　　　　　　　　　　　　　　　　　　　　　Next.js完全に理解した</a>
-      </div>
-      <div>
-        <h1>ドメイン:</h1>
-        <p>{domain}</p>
+        {/* responseDataがnullでない場合、データを表示 */}
+        {responseData && (
+          <select className={styles.dropdown}>
+          {responseData.map((item, index) => (
+            <option key={index} value={item}>{item}</option>
+          ))}
+          </select>
+        )}
       </div>
     </main>
   );
