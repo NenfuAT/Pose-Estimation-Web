@@ -4,6 +4,7 @@ export async function GET(): Promise<NextResponse> {
     try {
         // 他のAPIを叩くためのリクエストを作成
         const apiUrl = `${process.env.DOMAIN_NAME}/api/bucket/list`;
+		console.log(`${process.env.USER_NAME}:${process.env.PASSWORD}`)
         const response = await fetch(apiUrl, {
             method: "GET",
             headers: {
