@@ -2,8 +2,17 @@ import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse> {
     try {
+        // 他のAPIを叩くためのリクエストを作成
         const apiUrl = `${process.env.DOMAIN_NAME}/api/bucket/list`;
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Basic ${encodeToBase64(
+                    `${process.env.USER_NAME}:${process.env.PASSWORD}`
+                )}`,
+            },
+        });
     
         // レスポンスのステータスコードを確認
         if (!response.ok) {
