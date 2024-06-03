@@ -1,17 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         // 他のAPIを叩くためのリクエストを作成
-        const apiUrl = `${process.env.DOMAIN_NAME}/api/bucket/list`;
+        const apiUrl = `${process.env.DOMAIN_NAME}/api/object/list`;
+        const bodyData = await request.json();
         const response = await fetch(apiUrl, {
-            method: "GET",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Basic ${encodeToBase64(
                     `${process.env.USER_NAME}:${process.env.PASSWORD}`
                 )}`,
             },
+            body: JSON.stringify(bodyData),
         });
     
         // レスポンスのステータスコードを確認

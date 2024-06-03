@@ -109,11 +109,45 @@
   position: relative;
 }
 
-.dropdown {
-  padding: 8px;
-  font-size: 20px;
+.dropdownContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px;
+}
+
+.dropdown, .button ,.inputField{
+  padding: 10px;
+  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  outline: none;
+  background-color: #fff;
+  height: 40px; /* ここで高さを統一 */
+}
+
+.dropdown {
+  margin-right: 10px;
+}
+
+.inputField {
+  margin-right: 10px;
+}
+
+.button {
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+.button:disabled {
+  background-color: #ccc; /* 非活性時の色 */
+  cursor: not-allowed; /* マウスカーソルを変更 */
 }
 
 /* Enable hover only on non-touch devices */
