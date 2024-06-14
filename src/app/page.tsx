@@ -1,24 +1,29 @@
 "use client"
 import { useState, useEffect, SetStateAction } from 'react';
 import styles from './page.module.css';
-
+import { useRouter } from 'next/navigation';
+import LZString from 'lz-string';
 export default function Home() {
   const [bucketData, setBucketData] = useState<string[]>([]);
   const [objectData, setObjectData] = useState<string[]>([]);
   const [selectedBucket, setSelectedBucket] = useState<string>('');
   const [selectedGyro, setSelectedGyro] = useState<string>('');
   const [selectedAcc, setSelectedAcc] = useState<string>('');
+  const [gyroUrl, setGyroUrl] = useState<string>('');
+  const [accUrl, setAccUrl] = useState<string>('');
   const [pathValue, setPathValue] = useState<string>('');
   const [bucketButtonDisabled, setBucketButtonDisabled] = useState<boolean>(true); 
+  const router = useRouter();
   useEffect(() => {
     // クライアントサイドでAPIを叩く関数
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/buckets'); // APIのエンドポイントを指定
+        const response = await fetch('/api/buckets',{ cache: 'no-store' }); // APIのエンドポイントを指定
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
         const data = await response.json();
+        console.log(data.buckets)
         setBucketData(data.buckets);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -29,6 +34,14 @@ export default function Home() {
     fetchData();
   }, []); // コンポーネントがマウントされたときのみ実行する
 
+  useEffect(() => {
+    if (gyroUrl && accUrl) {
+      const compressedGyro = LZString.compressToEncodedURIComponent(gyroUrl);
+      const compressedAcc = LZString.compressToEncodedURIComponent(accUrl);
+      const href = `/3dviewer?gyro=${compressedGyro}&acc=${compressedAcc}`;
+      router.push(href);
+    }
+  }, [gyroUrl, accUrl]);
 
   const bucketSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedBucket(event.target.value);
@@ -51,6 +64,7 @@ export default function Home() {
   const bucketButtonClick = async () => {
     try {
       const response = await fetch('/api/objects', {
+        cache:'no-store',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,6 +87,56 @@ export default function Home() {
       console.error('Error posting data:', error);
     }
   };
+
+  const estimationButtonClick = async () => {
+    try {
+      // First request for gyro
+      const gyroResponsePromise = fetch('/api/urls', {
+        cache: 'no-store',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bucket: selectedBucket,
+          key: selectedGyro,
+        }),
+      });
+  
+      // Second request for acc
+      const accResponsePromise = fetch('/api/urls', {
+        cache: 'no-store',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bucket: selectedBucket,
+          key: selectedAcc,
+        }),
+      });
+  
+      const [gyroResponse, accResponse] = await Promise.all([gyroResponsePromise, accResponsePromise]);
+  
+      if (!gyroResponse.ok) {
+        throw new Error('Failed to post gyro data');
+      }
+      if (!accResponse.ok) {
+        throw new Error('Failed to post acc data');
+      }
+  
+      const gyroData = await gyroResponse.json();
+      const accData = await accResponse.json();
+  
+      setGyroUrl(gyroData.url);
+      setAccUrl(accData.url);
+  
+    } catch (error) {
+      console.error('Error posting data:', error);
+    }
+  };
+  
+  
 
   return (
     <main className={styles.main}>
@@ -116,7 +180,7 @@ export default function Home() {
       </div>
     )}
     {selectedGyro !== '' && selectedAcc !== '' && (
-      <button className={styles.button}>レッツ推定!!</button>
+      <button className={styles.button} onClick={estimationButtonClick}>レッツ推定!!</button>
     )}
     
   </div>

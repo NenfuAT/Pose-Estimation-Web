@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "lz-string": "^1.5.0",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
@@ -18,6 +19,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.165.0",
     "typescript": "^5"
   }
 }

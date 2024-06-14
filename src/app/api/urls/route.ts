@@ -6,6 +6,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const apiUrl = `${process.env.DOMAIN_NAME}/api/object/get`;
         const bodyData = await request.json();
         const response = await fetch(apiUrl, {
+            cache: 'no-store',
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

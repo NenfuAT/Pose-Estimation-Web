@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 export async function GET(): Promise<NextResponse> {
     try {
         // 他のAPIを叩くためのリクエストを作成
+        const timestanp=new Date().getTime();
         const apiUrl = `${process.env.DOMAIN_NAME}/api/bucket/list`;
         const response = await fetch(apiUrl, {
+            cache: 'no-store',
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -22,7 +24,7 @@ export async function GET(): Promise<NextResponse> {
     
         // JSON形式のレスポンスを取得
         const data = await response.json();
-    
+        console.log(data.buckets)
         // レスポンスを返す
         return new NextResponse(JSON.stringify(data), { status: response.status });
     } catch (error) {
