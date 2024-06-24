@@ -1,18 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         // 他のAPIを叩くためのリクエストを作成
-        const apiUrl = `${process.env.DOMAIN_NAME}/api/bucket/list`;
+        const apiUrl = `${process.env.ESTIMATION_API}/api/estimation`;
+        const bodyData = await request.json();
         const response = await fetch(apiUrl, {
             cache: 'no-store',
-            method: "GET",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Basic ${encodeToBase64(
                     `${process.env.USER_NAME}:${process.env.PASSWORD}`
                 )}`,
             },
+            body: JSON.stringify(bodyData),
         });
     
         // レスポンスのステータスコードを確認
@@ -23,7 +25,7 @@ export async function GET(): Promise<NextResponse> {
     
         // JSON形式のレスポンスを取得
         const data = await response.json();
-        console.log(data.buckets)
+    
         // レスポンスを返す
         return new NextResponse(JSON.stringify(data), { status: response.status });
     } catch (error) {
