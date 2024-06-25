@@ -60,10 +60,17 @@ const Canvas: NextPage = () => {
       // Fetch data from API
       const fetchData = async () => {
         try {
-          const response = await fetch('/api/estimation', { cache: 'no-store' });
-          if (!response.ok) {
-            throw new Error('Failed to fetch data');
-          }
+          const response = await fetch('/api/estimation', {
+            cache: 'no-store',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              gyro_url: gyroUrl,
+              acc_url: accUrl
+            }),
+          });
           const data = await response.json();
           console.log(data.buckets);
         } catch (error) {
