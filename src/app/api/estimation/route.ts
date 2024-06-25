@@ -12,10 +12,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             cache: 'no-store',
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                Authorization: `Basic ${encodeToBase64(
-                    `${process.env.USER_NAME}:${process.env.PASSWORD}`
-                )}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(bodyData),
         });
