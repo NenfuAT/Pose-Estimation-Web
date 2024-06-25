@@ -3,20 +3,19 @@ import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
 import LZString from 'lz-string';
-import { ReadonlyURLSearchParams, useSearchParams } from 'next/dist/client/components/navigation';
+import { useSearchParams } from 'next/dist/client/components/navigation';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 
 
 const Home: NextPage = () => {
+  const params = useSearchParams();
   let canvas: HTMLElement;
   const [gyroUrl, setGyroUrl] = useState<string>('');
   const [accUrl, setAccUrl] = useState<string>('');
   const [modelUrl, setModelUrl] = useState<string>('');
-  let params: ReadonlyURLSearchParams;
   useEffect(() => {
-    params=useSearchParams();
     // Fetch gyro and acc parameters from URL
     const compressedGyro = params.get("gyro");
     if (compressedGyro) {
