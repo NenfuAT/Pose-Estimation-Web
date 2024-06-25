@@ -40,6 +40,7 @@ const Home: NextPage = () => {
           body: JSON.stringify({
             bucket: "pose-estimation",
             key: "3d-model/pixelwatch.glb", // Update with your glTF model path
+            //key: "3d-model/phone.glb", // Update with your glTF model path
           }),
         });
 
