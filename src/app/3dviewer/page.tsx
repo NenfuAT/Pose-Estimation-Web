@@ -82,6 +82,7 @@ const Home: NextPage = () => {
     }
     function create(){
       const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x999999);  // 背景色を黒に設定
       const sizes = {
         width: window.innerWidth,
         height: window.innerHeight
@@ -97,9 +98,20 @@ const Home: NextPage = () => {
       renderer.setSize(sizes.width, sizes.height);
       renderer.setPixelRatio(window.devicePixelRatio);
 
+
+      // グリッドヘルパーを追加
+      const gridHelper = new THREE.GridHelper(100, 500, 0xffffff, 0xffffff); // サイズ100、分割数10、色白
+      // グリッドの線を薄くするために不透明度を設定
+      (gridHelper.material as THREE.Material).opacity = 0.2;
+      (gridHelper.material as THREE.Material).transparent = true;
+      scene.add(gridHelper);
+      //軸の表示
+      var axes = new THREE.AxesHelper(100);
+      scene.add(axes);
+
       // カメラを作成
       const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 1, 10000);
-      camera.position.set(0, 0, 5);
+      camera.position.set(3, 5, 5);
   
       // カメラコントローラーを作成
       const controls = new OrbitControls(camera, canvas);
@@ -107,7 +119,7 @@ const Home: NextPage = () => {
       controls.dampingFactor = 0.2;
 
       const directionlLight = new THREE.DirectionalLight( 0xE8D2CC,4.5 );
-      directionlLight.position.set( 10, 10, 50 ).normalize();
+      directionlLight.position.set( 20, 20, 60 ).normalize();
       scene.add( directionlLight );
 
       const pointLight = new THREE.PointLight(0xffffff, 0.2);
@@ -115,27 +127,35 @@ const Home: NextPage = () => {
       scene.add(pointLight);
 
       const gltfLoader = new GLTFLoader();
+      let model: THREE.Group<THREE.Object3DEventMap>
       console.log(modelUrl)
       gltfLoader.load(modelUrl, (gltf) => {
-        gltf.scene.scale.set(10.0, 10.0, 10.0); // Adjust scale as needed
-        gltf.scene.position.set(0,0,0);
-        scene.add(gltf.scene);
+        
+        model=gltf.scene
+        model.scale.set(15.0, 15.0, 15.0); // Adjust scale as needed
+        model.position.set(0,0,0);
+        scene.add(model);
+        // クォータニオンを初期化（単位クォータニオン）
+        const quaternion = new THREE.Quaternion();
+        const initquaternion = new THREE.Quaternion();
+        model.setRotationFromQuaternion(quaternion);
+        // 90度回転するクォータニオン
+        const targetQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(180),THREE.MathUtils.degToRad(90), THREE.MathUtils.degToRad(0)));
+        // アニメーションループ
+        function animate() {
+          requestAnimationFrame(animate);
+
+          // 現在のクォータニオンを補間してオブジェクトに適用
+          quaternion.slerp(targetQuaternion, 0.05); // 0.05は補間の速度を表すパラメータ
+
+          model.setRotationFromQuaternion(quaternion);
+
+
+          renderer.render(scene, camera);
+        }
+
         animate();
       });
-
-      const clock = new THREE.Clock();
-      const animate = () => {
-        const elapsedTime = clock.getElapsedTime();
-        scene.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            //child.rotation.x = elapsedTime;
-            child.rotation.y = elapsedTime;
-            //child.rotation.z = elapsedTime;
-          }
-        });
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      };
 
       const handleResize = () => {
         sizes.width = window.innerWidth;

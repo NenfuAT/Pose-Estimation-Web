@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         // 他のAPIを叩くためのリクエストを作成
+        //
+        //ToDoリクエストしっかりする
+        //
         const apiUrl = `${process.env.ESTIMATION_API}/api/estimation`;
         const bodyData = await request.json();
         const response = await fetch(apiUrl, {
