@@ -1,21 +1,21 @@
 "use client"
 import type { NextPage } from 'next'
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
 import LZString from 'lz-string';
-import { useSearchParams } from 'next/dist/client/components/navigation';
+
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { useSearchParams } from 'next/navigation';
 
 
-
-const Home: NextPage = () => {
+const Canvas: NextPage = () => {
+  const params = useSearchParams();
   let canvas: HTMLElement;
   const [gyroUrl, setGyroUrl] = useState<string>('');
   const [accUrl, setAccUrl] = useState<string>('');
   const [modelUrl, setModelUrl] = useState<string>('');
-  const params = useSearchParams();
-
   useEffect(() => {
     // Fetch gyro and acc parameters from URL
     const compressedGyro = params.get("gyro");
@@ -177,7 +177,20 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <canvas id="canvas"></canvas>
+        <canvas id="canvas"></canvas>
+
+    </>
+  );
+};
+
+
+const Home: NextPage = () => {
+
+  return (
+    <>
+    <Suspense fallback={<div>Loading...</div>}>
+        <Canvas />
+    </Suspense>
     </>
   );
 };
