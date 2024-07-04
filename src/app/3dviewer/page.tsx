@@ -4,18 +4,23 @@ import { Suspense } from 'react';
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
 import LZString from 'lz-string';
-
+import JSZip from 'jszip';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useSearchParams } from 'next/navigation';
 
-
+// ファイルの型定義を作成
+interface FileData {
+  name: string;
+  data: string;
+}
 const Canvas: NextPage = () => {
   const params = useSearchParams();
   let canvas: HTMLElement;
   const [gyroUrl, setGyroUrl] = useState<string>('');
   const [accUrl, setAccUrl] = useState<string>('');
   const [modelUrl, setModelUrl] = useState<string>('');
+  const [quaternionData, setQuaternionData] = useState<{ time: number; quaternion: THREE.Quaternion }[]>([]);
   useEffect(() => {
     // Fetch gyro and acc parameters from URL
     const compressedGyro = params.get("gyro");
@@ -57,8 +62,7 @@ const Canvas: NextPage = () => {
 
   useEffect(() => {
     if (gyroUrl && accUrl) {
-      // Fetch data from API
-      const fetchData = async () => {
+      const fetchCSVData = async () => {
         try {
           const response = await fetch('/api/estimation', {
             cache: 'no-store',
@@ -71,13 +75,21 @@ const Canvas: NextPage = () => {
               acc_url: accUrl
             }),
           });
-          const data = await response.json();
-          console.log(data.buckets);
+
+          const blob = await response.blob();
+          const zip = new JSZip();
+          const unzipped = await zip.loadAsync(blob);
+          const csvFile = unzipped.file(/.*\.csv$/i)[0]; // CSVファイルを取得
+          
+          const csvData = await csvFile.async("string");
+          setQuaternionData(parseCSV(csvData));
+
         } catch (error) {
           console.error('Error fetching data:', error);
         }
       };
-      fetchData();
+
+      fetchCSVData();
     }
   }, [gyroUrl, accUrl]);
 
@@ -112,6 +124,7 @@ const Canvas: NextPage = () => {
       // グリッドの線を薄くするために不透明度を設定
       (gridHelper.material as THREE.Material).opacity = 0.2;
       (gridHelper.material as THREE.Material).transparent = true;
+      //gridHelper.rotation.x = Math.PI / 2; // X軸周りに90度回転してXY平面に配置
       scene.add(gridHelper);
       //軸の表示
       var axes = new THREE.AxesHelper(100);
@@ -143,26 +156,23 @@ const Canvas: NextPage = () => {
         model.scale.set(15.0, 15.0, 15.0); // Adjust scale as needed
         model.position.set(0,0,0);
         scene.add(model);
-        // クォータニオンを初期化（単位クォータニオン）
-        const quaternion = new THREE.Quaternion();
-        const initquaternion = new THREE.Quaternion();
-        model.setRotationFromQuaternion(quaternion);
-        // 90度回転するクォータニオン
-        const targetQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(180),THREE.MathUtils.degToRad(90), THREE.MathUtils.degToRad(0)));
-        // アニメーションループ
-        function animate() {
-          requestAnimationFrame(animate);
+        let frameIndex = 0;
 
-          // 現在のクォータニオンを補間してオブジェクトに適用
-          quaternion.slerp(targetQuaternion, 0.05); // 0.05は補間の速度を表すパラメータ
+              // アニメーション関数
+              const animate = () => {
+                if (frameIndex < quaternionData.length) {
+                  const { quaternion } = quaternionData[frameIndex];
+                  // 時間に対応するクォータニオンを取得し、モデルに適用する
+                  model.setRotationFromQuaternion(quaternion);
 
-          model.setRotationFromQuaternion(quaternion);
+                  frameIndex++; // 次のフレームへ進む
+                }
 
-
-          renderer.render(scene, camera);
-        }
-
-        animate();
+                renderer.render(scene, camera);
+                controls.update();
+                requestAnimationFrame(animate);
+              };
+              animate();
       });
 
       const handleResize = () => {
@@ -180,7 +190,17 @@ const Canvas: NextPage = () => {
         window.removeEventListener('resize', handleResize);
       };
     }
-  }, [modelUrl]);
+  }, [modelUrl,quaternionData]);
+
+  // CSVデータのパース関数
+  const parseCSV = (csvData: string) => {
+    const lines = csvData.trim().split('\n');
+    const result = lines.slice(1).map(line => {
+      const [time, w, x, y, z] = line.split(',').map(parseFloat);
+      return { time, quaternion: new THREE.Quaternion(x, z, -y, w) };
+    });
+    return result;
+  };
 
   return (
     <>
