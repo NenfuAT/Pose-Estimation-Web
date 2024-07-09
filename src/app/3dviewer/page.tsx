@@ -10,18 +10,20 @@ import JSZip from "jszip";
 import { parseCSV } from "@/functions/parseCsv";
 import { downloadFile } from "@/functions/downloadFile";
 
-const Home: NextPage = () => {
+const Display: NextPage = () => {
   const [modelUrl, setModelUrl] = useState("");
   const params = useSearchParams();
   const [gyroUrl, setGyroUrl] = useState<string>("");
   const [accUrl, setAccUrl] = useState<string>("");
   const [quaternionData, setQuaternionData] = useState<Quaternions>([]);
-  const [quaternionCsv,setQuaternionCsv]=useState<Blob>();
+  const [quaternionCsv, setQuaternionCsv] = useState<Blob>();
+
   useEffect(() => {
-    if(modelUrl==""){
-      getModelUrl("3d-model/pixelwatch.glb")
+    if (modelUrl === "") {
+      getModelUrl("3d-model/pixelwatch.glb");
     }
-  },[])
+  }, []);
+
   useEffect(() => {
     // Fetch gyro and acc parameters from URL
     const compressedGyro = params.get("gyro");
@@ -37,7 +39,6 @@ const Home: NextPage = () => {
         LZString.decompressFromEncodedURIComponent(compressedAcc);
       setAccUrl(decompressedAcc);
     }
-    
   }, [params]);
 
   useEffect(() => {
@@ -73,26 +74,28 @@ const Home: NextPage = () => {
       fetchCSVData();
     }
   }, [gyroUrl, accUrl]);
+
   const modelButtons: ButtonConfig[] = [
     {
       title: "ピクセルウォッチ",
       onClick: () => {
-        getModelUrl("3d-model/pixelwatch.glb")
-      }
+        getModelUrl("3d-model/pixelwatch.glb");
+      },
     },
     {
       title: "スマートフォン",
       onClick: () => {
-        getModelUrl("3d-model/phone.glb")
-      }
+        getModelUrl("3d-model/phone.glb");
+      },
     },
   ];
+
   const downloadButtons: ButtonConfig[] = [
     {
       title: "クォータニオン",
       onClick: () => {
-        if(quaternionCsv){
-          downloadFile(quaternionCsv)
+        if (quaternionCsv) {
+          downloadFile(quaternionCsv);
         }
       },
     },
@@ -101,9 +104,8 @@ const Home: NextPage = () => {
       onClick: () => {},
     },
   ];
-  
 
-  function getModelUrl(key:string){
+  function getModelUrl(key: string) {
     const fetchData = async () => {
       try {
         const modelResponse = await fetch("/api/urls", {
@@ -127,23 +129,25 @@ const Home: NextPage = () => {
     fetchData();
   }
 
-
   return (
     <>
       <div>
-        <MenuBar
-          tabName="3Dモデル"
-          buttonConfigs={modelButtons}
-        />
-        <MenuBar
-          tabName="ダウンロード"
-          buttonConfigs={downloadButtons}
-        />
+        <MenuBar tabName="3Dモデル" buttonConfigs={modelButtons} />
+        <MenuBar tabName="ダウンロード" buttonConfigs={downloadButtons} />
       </div>
-      
-      <Suspense fallback={<div>Loading...</div>}>
-        <ModelView modelUrl={modelUrl} quaternionData={quaternionData}/>
-      </Suspense>
+      <ModelView modelUrl={modelUrl} quaternionData={quaternionData} />
+    </>
+  );
+};
+
+
+const Home: NextPage = () => {
+
+  return (
+    <>
+    <Suspense fallback={<div>Loading...</div>}>
+        <Display />
+    </Suspense>
     </>
   );
 };
