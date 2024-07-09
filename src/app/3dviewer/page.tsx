@@ -3,15 +3,76 @@ import type { NextPage } from "next";
 import { Suspense, useEffect, useState } from "react";
 import MenuBar from "../components/MenuBar/MenuBar";
 import ModelView from "../components/ModelView/ModelView";
-import { ButtonConfig } from "@/types";
+import { ButtonConfig, Quaternions } from "@/types";
+import { useSearchParams } from "next/navigation";
+import LZString from "lz-string";
+import JSZip from "jszip";
+import { parseCSV } from "@/functions/parseCsv";
+import { downloadFile } from "@/functions/downloadFile";
 
 const Home: NextPage = () => {
   const [modelUrl, setModelUrl] = useState("");
+  const params = useSearchParams();
+  const [gyroUrl, setGyroUrl] = useState<string>("");
+  const [accUrl, setAccUrl] = useState<string>("");
+  const [quaternionData, setQuaternionData] = useState<Quaternions>([]);
+  const [quaternionCsv,setQuaternionCsv]=useState<Blob>();
   useEffect(() => {
     if(modelUrl==""){
       getModelUrl("3d-model/pixelwatch.glb")
     }
   },[])
+  useEffect(() => {
+    // Fetch gyro and acc parameters from URL
+    const compressedGyro = params.get("gyro");
+    if (compressedGyro) {
+      const decompressedGyro =
+        LZString.decompressFromEncodedURIComponent(compressedGyro);
+      setGyroUrl(decompressedGyro);
+    }
+
+    const compressedAcc = params.get("acc");
+    if (compressedAcc) {
+      const decompressedAcc =
+        LZString.decompressFromEncodedURIComponent(compressedAcc);
+      setAccUrl(decompressedAcc);
+    }
+    
+  }, [params]);
+
+  useEffect(() => {
+    if (gyroUrl && accUrl) {
+      const fetchCSVData = async () => {
+        try {
+          const response = await fetch("/api/estimation", {
+            cache: "no-store",
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              gyro_url: gyroUrl,
+              acc_url: accUrl,
+            }),
+          });
+
+          const blob = await response.blob();
+          const zip = new JSZip();
+          const unzipped = await zip.loadAsync(blob);
+          const csvFile = unzipped.file(/.*\.csv$/i)[0]; // CSVファイルを取得
+          const csvData = await csvFile.async("string");
+          const uint8Array = await csvFile.async("uint8array");
+          const csvBlob = new Blob([uint8Array.buffer], { type: "application/octet-stream" });
+          setQuaternionCsv(csvBlob);
+          setQuaternionData(parseCSV(csvData));
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+
+      fetchCSVData();
+    }
+  }, [gyroUrl, accUrl]);
   const modelButtons: ButtonConfig[] = [
     {
       title: "ピクセルウォッチ",
@@ -26,6 +87,21 @@ const Home: NextPage = () => {
       }
     },
   ];
+  const downloadButtons: ButtonConfig[] = [
+    {
+      title: "クォータニオン",
+      onClick: () => {
+        if(quaternionCsv){
+          downloadFile(quaternionCsv)
+        }
+      },
+    },
+    {
+      title: "角度(まだ)",
+      onClick: () => {},
+    },
+  ];
+  
 
   function getModelUrl(key:string){
     const fetchData = async () => {
@@ -59,9 +135,14 @@ const Home: NextPage = () => {
           tabName="3Dモデル"
           buttonConfigs={modelButtons}
         />
+        <MenuBar
+          tabName="ダウンロード"
+          buttonConfigs={downloadButtons}
+        />
       </div>
+      
       <Suspense fallback={<div>Loading...</div>}>
-        <ModelView modelUrl={modelUrl}/>
+        <ModelView modelUrl={modelUrl} quaternionData={quaternionData}/>
       </Suspense>
     </>
   );

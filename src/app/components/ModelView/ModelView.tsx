@@ -1,73 +1,17 @@
 import { Quaternions } from "@/types";
-import { useSearchParams } from "next/navigation";
-import type { NextPage } from "next";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { useEffect, useState } from "react";
-import LZString from "lz-string";
-import JSZip from "jszip";
+import { useEffect} from "react";
+
 
 type Props = {
+  quaternionData:Quaternions;
   modelUrl: string;
 };
 
-const ModelView = ({ modelUrl }: Props) => {
-  const params = useSearchParams();
+const ModelView = ({ quaternionData,modelUrl }: Props) => {
   let canvas: HTMLElement;
-  const [gyroUrl, setGyroUrl] = useState<string>("");
-  const [accUrl, setAccUrl] = useState<string>("");
-  //const [modelUrl, setModelUrl] = useState<string>("");
-  const [quaternionData, setQuaternionData] = useState<Quaternions>([]);
-  useEffect(() => {
-    // Fetch gyro and acc parameters from URL
-    const compressedGyro = params.get("gyro");
-    if (compressedGyro) {
-      const decompressedGyro =
-        LZString.decompressFromEncodedURIComponent(compressedGyro);
-      setGyroUrl(decompressedGyro);
-    }
-
-    const compressedAcc = params.get("acc");
-    if (compressedAcc) {
-      const decompressedAcc =
-        LZString.decompressFromEncodedURIComponent(compressedAcc);
-      setAccUrl(decompressedAcc);
-    }
-    
-  }, [params]);
-
-  useEffect(() => {
-    if (gyroUrl && accUrl) {
-      const fetchCSVData = async () => {
-        try {
-          const response = await fetch("/api/estimation", {
-            cache: "no-store",
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              gyro_url: gyroUrl,
-              acc_url: accUrl,
-            }),
-          });
-
-          const blob = await response.blob();
-          const zip = new JSZip();
-          const unzipped = await zip.loadAsync(blob);
-          const csvFile = unzipped.file(/.*\.csv$/i)[0]; // CSVファイルを取得
-
-          const csvData = await csvFile.async("string");
-          setQuaternionData(parseCSV(csvData));
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      };
-
-      fetchCSVData();
-    }
-  }, [gyroUrl, accUrl]);
 
   useEffect(() => {
     if (!canvas) {
@@ -150,7 +94,9 @@ const ModelView = ({ modelUrl }: Props) => {
           controls.update();
           requestAnimationFrame(animate);
         };
+
         animate();
+
       });
 
       const handleResize = () => {
@@ -169,16 +115,6 @@ const ModelView = ({ modelUrl }: Props) => {
       };
     }
   }, [modelUrl,quaternionData]);
-
-  // CSVデータのパース関数
-  const parseCSV = (csvData: string) => {
-    const lines = csvData.trim().split("\n");
-    const result = lines.slice(1).map((line) => {
-      const [time, w, x, y, z] = line.split(",").map(parseFloat);
-      return { time, quaternion: new THREE.Quaternion(x, z, -y, w) };
-    });
-    return result;
-  };
 
   return (
     <>
