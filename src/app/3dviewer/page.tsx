@@ -1,14 +1,15 @@
 "use client";
 import type { NextPage } from "next";
 import { Suspense, useEffect, useState } from "react";
-import MenuBar from "../components/MenuBar/MenuBar";
-import ModelView from "../components/ModelView/ModelView";
+import MenuBar from "../components/MenuBar";
+import ModelView from "../components/ModelView";
 import { ButtonConfig, Quaternions } from "@/types";
 import { useSearchParams } from "next/navigation";
 import LZString from "lz-string";
 import JSZip from "jszip";
 import { parseCSV } from "@/functions/parseCsv";
 import { downloadFile } from "@/functions/downloadFile";
+import styles from "./style.module.scss"
 
 const Display: NextPage = () => {
   const [modelUrl, setModelUrl] = useState("");
@@ -131,7 +132,7 @@ const Display: NextPage = () => {
 
   return (
     <>
-      <div>
+      <div className={styles.bar}>
         <MenuBar tabName="3Dモデル" buttonConfigs={modelButtons} />
         <MenuBar tabName="ダウンロード" buttonConfigs={downloadButtons} />
       </div>

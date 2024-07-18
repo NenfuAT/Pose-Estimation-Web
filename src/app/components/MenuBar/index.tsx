@@ -1,5 +1,5 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
-import "./MenuBar.css";
+import React, { useState } from "react";
+import styles from "./style.module.scss"
 import { ButtonConfig } from "@/types";
 
 type Props = {
@@ -20,18 +20,18 @@ const MenuBar = ({ tabName, buttonConfigs }: Props) => {
 
   return (
     <div
-      className="container"
+      className={styles.container}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button className="main-button">{tabName}</button>
+      <button className={styles.mainButton}>{tabName}</button>
       {isHovered && (
-        <div className="dropdown">
+        <div className={styles.dropdown}>
           {buttonConfigs.map((buttonConfig) => (
             <button
               key={buttonConfig.title}
               onClick={buttonConfig.onClick}
-              className="dropdown-button"
+              className={styles.dropdownButton}
             >
               {buttonConfig.title}
             </button>

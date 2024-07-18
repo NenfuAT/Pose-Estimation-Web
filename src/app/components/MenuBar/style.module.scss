@@ -1,9 +1,10 @@
 .container {
+	position: absolute;
 	position: relative;
 	display: inline-block;
 }
 
-.main-button {
+.mainButton {
 	padding: 10px 20px;
 	font-size: 16px;
 }
@@ -17,7 +18,7 @@
 	gap: 5px;
 }
 
-.dropdown-button {
+.dropdownButton {
 	padding: 10px 20px;
 	font-size: 14px;
 }
