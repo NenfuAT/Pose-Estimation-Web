@@ -2,7 +2,8 @@ import { Quaternions } from "@/types";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { useEffect} from "react";
+import { useEffect, useState} from "react";
+import AngleView from "../AngleView";
 
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
 
 const ModelView = ({ quaternionData,modelUrl }: Props) => {
   let canvas: HTMLElement;
+  const [frameQuaternion, setQuaternion] = useState<THREE.Quaternion>();
+  const [flag,setFlag]=useState<boolean>(false);
 
   useEffect(() => {
     if (!canvas) {
@@ -84,6 +87,7 @@ const ModelView = ({ quaternionData,modelUrl }: Props) => {
         const animate = () => {
           if (frameIndex < quaternionData.length) {
             const { quaternion } = quaternionData[frameIndex];
+            setQuaternion(quaternion)
             // 時間に対応するクォータニオンを取得し、モデルに適用する
             model.setRotationFromQuaternion(quaternion);
 
@@ -118,6 +122,7 @@ const ModelView = ({ quaternionData,modelUrl }: Props) => {
 
   return (
     <>
+      <AngleView quaternion={frameQuaternion!}/>
       <canvas id="canvas"></canvas>
     </>
   );
