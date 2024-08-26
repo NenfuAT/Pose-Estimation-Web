@@ -3,13 +3,13 @@ import type { NextPage } from "next";
 import { Suspense, useEffect, useState } from "react";
 import MenuBar from "../components/MenuBar";
 import ModelView from "../components/ModelView";
-import { ButtonConfig, Quaternions } from "@/types";
+import { ButtonConfig, Distances, Quaternions } from "@/types";
 import { useSearchParams } from "next/navigation";
 import LZString from "lz-string";
 import JSZip from "jszip";
-import { parseCSV } from "@/functions/parseCsv";
 import { downloadFile } from "@/functions/downloadFile";
 import styles from "./style.module.scss"
+import { parseDistanceCSV, parseQuaternionCSV } from "@/functions/parseCsv";
 
 const Display: NextPage = () => {
   const [modelUrl, setModelUrl] = useState("");
@@ -18,6 +18,9 @@ const Display: NextPage = () => {
   const [accUrl, setAccUrl] = useState<string>("");
   const [quaternionData, setQuaternionData] = useState<Quaternions>([]);
   const [quaternionCsv, setQuaternionCsv] = useState<Blob>();
+  const [distanceData, setDistanceData] = useState<Distances>([]);
+  const [distanceCsv, setDistanceCsv] = useState<Blob>();
+
 
   useEffect(() => {
     if (modelUrl === "") {
@@ -61,12 +64,24 @@ const Display: NextPage = () => {
           const blob = await response.blob();
           const zip = new JSZip();
           const unzipped = await zip.loadAsync(blob);
-          const csvFile = unzipped.file(/.*\.csv$/i)[0]; // CSVファイルを取得
-          const csvData = await csvFile.async("string");
-          const uint8Array = await csvFile.async("uint8array");
-          const csvBlob = new Blob([uint8Array.buffer], { type: "application/octet-stream" });
-          setQuaternionCsv(csvBlob);
-          setQuaternionData(parseCSV(csvData));
+          console.log(Object.keys(unzipped.files));
+          const csvFiles = unzipped.file(/.*\.csv$/i);
+                if (csvFiles.length < 2) {
+                    throw new Error("Expected two CSV files but found less.");
+                }
+
+          const quaternionCsvFile = csvFiles[0];
+          const distanceCsvFile = csvFiles[1];
+          const quaternionCsvData = await quaternionCsvFile.async("string");
+          const distanceCsvData = await distanceCsvFile.async("string");
+          const quaternionUint8Array = await quaternionCsvFile.async("uint8array");
+          const distanceUint8Array = await distanceCsvFile.async("uint8array");
+          const quaternionCsvBlob = new Blob([quaternionUint8Array.buffer], { type: "application/octet-stream" });
+          const distanceCsvBlob = new Blob([distanceUint8Array.buffer], { type: "application/octet-stream" });
+          setQuaternionCsv(quaternionCsvBlob);
+          setDistanceCsv(distanceCsvBlob);
+          setQuaternionData(parseQuaternionCSV(quaternionCsvData));
+          setDistanceData(parseDistanceCSV(distanceCsvData));
         } catch (error) {
           console.error("Error fetching data:", error);
         }
@@ -136,7 +151,7 @@ const Display: NextPage = () => {
         <MenuBar tabName="3Dモデル" buttonConfigs={modelButtons} />
         <MenuBar tabName="ダウンロード" buttonConfigs={downloadButtons} />
       </div>
-      <ModelView modelUrl={modelUrl} quaternionData={quaternionData} />
+      <ModelView modelUrl={modelUrl} quaternionData={quaternionData} distanceData={distanceData} />
     </>
   );
 };

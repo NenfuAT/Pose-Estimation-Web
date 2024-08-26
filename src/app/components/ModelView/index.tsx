@@ -1,19 +1,22 @@
-import { Quaternions } from "@/types";
+import { Distances, Quaternions } from "@/types";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useEffect, useState} from "react";
 import AngleView from "../AngleView";
+import { Distance } from "@/classes";
 
 
 type Props = {
   quaternionData:Quaternions;
+  distanceData:Distances;
   modelUrl: string;
 };
 
-const ModelView = ({ quaternionData,modelUrl }: Props) => {
+const ModelView = ({ quaternionData,distanceData,modelUrl }: Props) => {
   let canvas: HTMLElement;
   const [frameQuaternion, setQuaternion] = useState<THREE.Quaternion>();
+  const [frameDistance,setDistance]=useState<Distance>();
   const [flag,setFlag]=useState<boolean>(false);
 
   useEffect(() => {
@@ -83,15 +86,30 @@ const ModelView = ({ quaternionData,modelUrl }: Props) => {
         scene.add(model);
         let frameIndex = 0;
 
-        // アニメーション関数
-        const animate = () => {
-          if (frameIndex < quaternionData.length) {
-            const { quaternion } = quaternionData[frameIndex];
-            setQuaternion(quaternion)
-            // 時間に対応するクォータニオンを取得し、モデルに適用する
-            model.setRotationFromQuaternion(quaternion);
+        let interval = (quaternionData[1].time-quaternionData[0].time)// フレームごとの時間間隔
+        let startTime = 0; // 最後のフレームの時間
 
-            frameIndex++; // 次のフレームへ進む
+        const animate = (timestamp: number) => {
+          if (!startTime) startTime = timestamp;
+          const delta = timestamp - startTime;
+          console.log("interval"+interval)
+          console.log(timestamp)
+          if (delta> interval) {
+            if (frameIndex < quaternionData.length) {
+              interval =(quaternionData[frameIndex].time-quaternionData[0].time)
+              const { quaternion } = quaternionData[frameIndex];
+              const { distance } = distanceData[frameIndex];
+              setQuaternion(quaternion);
+              setDistance(distance);
+              // 時間に対応するクォータニオンを取得し、モデルに適用する
+              model.setRotationFromQuaternion(quaternion);
+              // 移動データをモデルに適用
+              if (distance) {
+                model.position.set(distance.x*10, distance.y*10, distance.z*10);
+              }
+
+              frameIndex++; // 次のフレームへ進む
+            }
           }
 
           renderer.render(scene, camera);
@@ -99,7 +117,8 @@ const ModelView = ({ quaternionData,modelUrl }: Props) => {
           requestAnimationFrame(animate);
         };
 
-        animate();
+        requestAnimationFrame(animate);
+
 
       });
 
