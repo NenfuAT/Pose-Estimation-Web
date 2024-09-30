@@ -111,13 +111,17 @@ const Display: NextPage = () => {
       title: "クォータニオン",
       onClick: () => {
         if (quaternionCsv) {
-          downloadFile(quaternionCsv);
+          downloadFile(quaternionCsv,"quaternion");
         }
       },
     },
     {
-      title: "角度(まだ)",
-      onClick: () => {},
+      title: "移動距離",
+      onClick: () => {
+        if(distanceCsv){
+          downloadFile(distanceCsv,"distance");
+        }
+      },
     },
   ];
 

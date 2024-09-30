@@ -92,8 +92,8 @@ const ModelView = ({ quaternionData,distanceData,modelUrl }: Props) => {
         const animate = (timestamp: number) => {
           if (!startTime) startTime = timestamp;
           const delta = timestamp - startTime;
-          console.log("interval"+interval)
-          console.log(timestamp)
+          // console.log("interval"+interval)
+          // console.log(timestamp)
           if (delta> interval) {
             if (frameIndex < quaternionData.length) {
               interval =(quaternionData[frameIndex].time-quaternionData[0].time)
