@@ -140,7 +140,7 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-    <h1>端末の姿勢推定する蔵</h1>
+    {/* <h1>端末の姿勢推定する蔵</h1> */}
   <div>
     <h1>バケット選択</h1>
     {/* responseDataがnullでない場合、データを表示 */}
